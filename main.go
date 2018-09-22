@@ -13,7 +13,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -22,7 +21,7 @@ import (
 const (
 	instagramUrl = "https://www.instagram.com"
 	userAgent    = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.92 Safari/537.36"
-	queryMedia   = instagramUrl + "/graphql/query/?query_hash=%s&variables={\"id\":\"%s\",\"first\":%s,\"after\":\"%s\"}"
+	queryMedia   = instagramUrl + "/graphql/query/?query_hash=%s&variables={\"id\":\"%s\",\"first\":%d,\"after\":\"%s\"}"
 )
 
 var transport *http.Transport
@@ -31,8 +30,8 @@ var wg sync.WaitGroup
 var username = flag.String("username", "", "a instagram username")
 var sessionId = flag.String("sessionId", "", "a valid instagram session id")
 var proxy = flag.String("proxy", "", "network proxy")
-var downloadSize = flag.String("downloadSize", "4", "parallel download size")
-var parseSize = flag.String("parseSize", "12", "page size of media")
+var downloadSize = flag.Int("downloadSize", 4, "parallel download size")
+var parseSize = flag.Int("parseSize", 12, "page size of media")
 
 func init() {
 	flag.Parse()
@@ -56,11 +55,7 @@ func parseUser(username string, timeout time.Duration) error {
 	}
 
 	downloadUrl := make(chan string)
-	size, err := strconv.Atoi(*downloadSize)
-	if err != nil {
-		return err
-	}
-	for i := 0; i < size; i++ {
+	for i := 0; i < *downloadSize; i++ {
 		go downloadFile(username, downloadUrl, timeout)
 		wg.Add(1)
 	}
